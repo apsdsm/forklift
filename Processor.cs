@@ -77,6 +77,48 @@ namespace ForkLift
         }
 
         /// <summary>
+        /// Import the specified type of asset, running it through the specified importer and validator. 
+        /// No files are are implicitely created using ManualImport.
+        /// </summary>
+        /// <typeparam name="TAsset">the type of asset to import</typeparam>
+        /// <typeparam name="TImporter">the manual importer to use</typeparam>
+        /// <typeparam name="TValidator">the validator to use</typeparam>
+        /// <param name="asset">the location of the asset</param>
+        public void ManualImport<TAsset, TImporter, TValidator>(string assetPath) where TAsset : ScriptableObject
+                                                                              where TImporter : IManualImporter<TAsset>
+                                                                              where TValidator : IValidator
+        {
+            if (!IsImportableExcelFile(assetPath))
+            {
+                Debug.Log("PROCESSING ERROR: File is not processable format.");
+                return;
+            }
+
+            if (!assetPath.StartsWith(projectRoot))
+            {
+                Debug.Log("PROCESSING ERROR: Cannot find project root '" + projectRoot + "' in asset path '" + assetPath + "'.");
+                return;
+            }
+            
+            var data = new ImportData();
+            var reader = new ForkLift.Readers.ExcelReader();
+            var validationRunner = new ValidationRunner();
+            var validator = Activator.CreateInstance<TValidator>();
+            
+            reader.ReadAsset(assetPath, ref data);
+            
+            if (!validationRunner.IsValid(data, validator))
+            {
+                Debug.Log("ERROR: File is not valid");
+                // @todo display error messages
+                return;
+            }
+            
+            var userImporter = Activator.CreateInstance<TImporter>();
+            userImporter.Import(this, assetPath, data);
+        }
+
+        /// <summary>
         /// Will return true if the filename matches an importable Excel file. Excel files are importable if:
         /// - they have an .xlsx extension
         /// - they don't contain ~$ in the filename (indicates a temp file)
