@@ -145,6 +145,10 @@ namespace ForkLift.Readers
                     for (int i = 0; i < data.fieldNames.Count; ++i)
                     {
                         var fieldName = data.fieldNames[i];
+
+                        // ignore empty columns
+                        if (string.IsNullOrEmpty(fieldName)) continue;
+
                         var field = new Field() {value = CellValueAsString(row.GetCell(i))};
 
                         validatorRow.fields.Add(fieldName, field);
