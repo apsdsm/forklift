@@ -115,7 +115,7 @@ namespace ForkLift
             }
             
             var userImporter = Activator.CreateInstance<TImporter>();
-            userImporter.Import(this, assetPath, data);
+            userImporter.Import(assetPath, data);
         }
 
         /// <summary>
@@ -134,12 +134,12 @@ namespace ForkLift
         /// Will either load an existing asset of the specified type, or create a new one.
         /// </summary>
         /// <typeparam name="T">Type of asset to create</typeparam>
-        /// <param name="assetPath">where to load from or create</param>
-        /// <returns>the scriptiable object that was loaded or created.</returns>
-        private ScriptableObject LoadOrCreateAsset<T>(string assetPath) where T : ScriptableObject
+        /// <param name="sourceAssetPath">where to load from</param>
+        /// <returns>the scriptable object that was loaded or created.</returns>
+        T LoadOrCreateAssetForSource<T>(string sourceAssetPath) where T : ScriptableObject
         {
-            string assetFileName = Path.GetFileName(assetPath);
-            string assetDirName = Path.GetDirectoryName(assetPath);
+            string assetFileName = Path.GetFileName(sourceAssetPath);
+            string assetDirName = Path.GetDirectoryName(sourceAssetPath);
             string assetDirNameInternal = assetDirName.TrimStart(projectRoot.ToCharArray());
 
             // after trimming the project root from the input asset file directory, if the save dir is not the only 
@@ -169,7 +169,31 @@ namespace ForkLift
                 AssetDatabase.CreateAsset(asset, saveFileName);
             }
 
-            return asset;
+            return asset as T;
+        }
+
+        /// <summary>
+        /// Load an asset of the specified type, or create a new one.
+        /// </summary>
+        /// <param name="path">Path of the asset.</param>
+        /// <typeparam name="T">Type of asset.</typeparam>
+        /// <returns>The asset.</returns>
+        public static T LoadOrCreateAsset<T>(string path) where T : ScriptableObject
+        {
+            string assetFileName = Path.GetFileName(path);
+            string assetDirName = Path.GetDirectoryName(path);
+            string saveFileName = Path.Combine(assetDirName, Path.GetFileNameWithoutExtension(assetFileName)) + ".asset";
+
+            Directory.CreateDirectory(assetDirName);
+            ScriptableObject asset = AssetDatabase.LoadAssetAtPath(saveFileName, typeof(T)) as ScriptableObject;
+
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<T>();
+                AssetDatabase.CreateAsset(asset, saveFileName);
+            }
+
+            return asset as T;
         }
     }
 }

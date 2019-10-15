@@ -10,10 +10,9 @@ namespace ForkLift
         /// <summary>
         /// Import data.
         /// </summary>
-        /// <param name="processor">importing processor</param>
         /// <param name="assetPath">filepath of data to import</param>
         /// <param name="assetData">source of data to import</param>
         /// <returns>Instance of generated ScriptableObject</returns>
-        void Import(Processor processor, string assetPath, ImportData assetData);
+        void Import(string sourceAssetPath, ImportData assetData);
     }
 }
